@@ -10,56 +10,108 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #f9f9f9;
         }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        .image-item {
-            position: relative;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        .image-item img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-        .image-controls {
-            padding: 10px;
-            background-color: #f5f5f5;
-        }
-        .copy-btn, .delete-btn {
-            padding: 5px 10px;
-            margin: 2px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-        .copy-btn {
-            background-color: #2196F3;
-            color: white;
-        }
-        .delete-btn {
-            background-color: #f44336;
-            color: white;
+        h1 {
+            color: #333;
+            margin: 0;
         }
         .upload-more {
             display: inline-block;
-            margin-top: 20px;
             padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
             text-decoration: none;
             border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .upload-more:hover {
+            background-color: #45a049;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .image-item {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .image-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .image-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        .image-info {
+            padding: 15px;
+        }
+        .image-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+        .empty-text {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .empty-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .empty-link:hover {
+            background-color: #45a049;
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
         }
     </style>
 </head>
@@ -70,11 +122,48 @@
     </div>
     
     <div class="image-grid" id="imageGrid">
-        <!-- Изображения будут добавлены динамически в следующей фазе -->
+        <!-- Placeholder изображения -->
+        <div class="image-item">
+            <img src="https://picsum.photos/seed/placeholder1/400/300.jpg" alt="Изображение 1">
+            <div class="image-info">
+                <div class="image-name">example-image-1.jpg</div>
+            </div>
+        </div>
+        
+        <div class="image-item">
+            <img src="https://picsum.photos/seed/placeholder2/400/300.jpg" alt="Изображение 2">
+            <div class="image-info">
+                <div class="image-name">screenshot-2025.png</div>
+            </div>
+        </div>
+        
+        <div class="image-item">
+            <img src="https://picsum.photos/seed/placeholder3/400/300.jpg" alt="Изображение 3">
+            <div class="image-info">
+                <div class="image-name">photo-vacation.jpg</div>
+            </div>
+        </div>
+        
+        <div class="image-item">
+            <img src="https://picsum.photos/seed/placeholder4/400/300.jpg" alt="Изображение 4">
+            <div class="image-info">
+                <div class="image-name">diagram-project.png</div>
+            </div>
+        </div>
+        
+        <div class="image-item">
+            <img src="https://picsum.photos/seed/placeholder5/400/300.jpg" alt="Изображение 5">
+            <div class="image-info">
+                <div class="image-name">meme-funny.jpg</div>
+            </div>
+        </div>
+        
+        <div class="image-item">
+            <img src="https://picsum.photos/seed/placeholder6/400/300.jpg" alt="Изображение 6">
+            <div class="image-info">
+                <div class="image-name">wallpaper-hd.jpg</div>
+            </div>
+        </div>
     </div>
-    
-    <script>
-        // Базовый JavaScript для управления изображениями будет добавлен в следующей фазе
-    </script>
 </body>
 </html>
