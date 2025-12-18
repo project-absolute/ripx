@@ -12,7 +12,7 @@ func main() {
 	// Создание директории для хранения данных
 	err := ensureDataDir()
 	if err != nil {
-		return
+		os.Exit(1)
 	}
 	
 	// Создаем контекст для graceful shutdown

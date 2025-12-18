@@ -1,7 +1,10 @@
 # Этап сборки
-FROM golang:1.21-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
+
+# Копируем go.mod
+COPY go.mod .
 
 # Копируем исходный код
 COPY app/ .
@@ -24,7 +27,7 @@ COPY --from=builder /app/imagehost .
 COPY --from=builder /app/templates ./templates
 
 # Открываем порт
-EXPOSE 8080
+EXPOSE 8000
 
 # Запускаем приложение
 CMD ["./imagehost"]

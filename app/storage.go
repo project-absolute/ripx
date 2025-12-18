@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Максимальный размер файла в байтах (10MB)
@@ -33,10 +34,6 @@ type ImageInfo struct {
 
 // generateUniqueFilename генерирует уникальное имя файла
 func generateUniqueFilename(originalFilename string, extension string) string {
-	bytes := make([]byte, 16)
-	rand.Read(bytes)
-	randomString := hex.EncodeToString(bytes)
-	
 	// Получаем расширение оригинального файла
 	ext := strings.ToLower(filepath.Ext(originalFilename))
 	if extension != "" {
@@ -45,6 +42,15 @@ func generateUniqueFilename(originalFilename string, extension string) string {
 		ext = ".jpg" // расширение по умолчанию
 	}
 	
+	bytes := make([]byte, 16)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		// В случае ошибки генерации случайных данных, используем timestamp
+		randomString := fmt.Sprintf("%d", time.Now().UnixNano())
+		return randomString + ext
+	}
+	
+	randomString := hex.EncodeToString(bytes)
 	return randomString + ext
 }
 
@@ -58,7 +64,10 @@ func validateImageType(file multipart.File) (string, bool) {
 	}
 	
 	// Восстанавливаем указатель файла в начало
-	file.Seek(0, 0)
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return "", false
+	}
 	
 	// Определяем MIME тип
 	contentType := http.DetectContentType(buffer)
@@ -210,11 +219,6 @@ func getUserImagesPaginated(userID string, page, pageSize int) ([]ImageInfo, err
 	return images, nil
 }
 
-// deleteImage удаляет изображение
-func deleteImage(filename, userID string) error {
-	// Реализация будет добавлена в следующей фазе
-	return nil
-}
 
 // getSessionID получает или генерирует ID сессии пользователя
 func getSessionID(w http.ResponseWriter, r *http.Request) string {
@@ -226,8 +230,14 @@ func getSessionID(w http.ResponseWriter, r *http.Request) string {
 	
 	// Генерируем новый ID сессии
 	bytes := make([]byte, 16)
-	rand.Read(bytes)
-	sessionID := hex.EncodeToString(bytes)
+	_, err = rand.Read(bytes)
+	var sessionID string
+	if err != nil {
+		// В случае ошибки генерации случайных данных, используем timestamp
+		sessionID = fmt.Sprintf("%d", time.Now().UnixNano())
+	} else {
+		sessionID = hex.EncodeToString(bytes)
+	}
 	
 	// Устанавливаем cookie
 	http.SetCookie(w, &http.Cookie{

@@ -17,12 +17,16 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	
 	if r.Method == "GET" {
 		// Отображаем главную страницу
-		tmpl, err := template.ParseFiles("app/templates/index.html")
+		tmpl, err := template.ParseFiles("templates/index.html")
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, nil)
+		err = tmpl.Execute(w, nil)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	
@@ -41,7 +45,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	sessionID := getSessionID(w, r)
 	
 	// Ограничиваем размер запроса до 10MB
-	r.ParseMultipartForm(10 << 20) // 10 MB
+	err := r.ParseMultipartForm(10 << 20) // 10 MB
+	if err != nil {
+		http.Error(w, "Error parsing form", http.StatusBadRequest)
+		return
+	}
 	
 	// Получаем файл из формы
 	file, header, err := r.FormFile("image")
@@ -148,12 +156,16 @@ func albumHandler(w http.ResponseWriter, r *http.Request) {
 	
 	// Отображаем страницу альбома
 	tmpl := template.New("album.html").Funcs(funcMap)
-	tmpl, err = tmpl.ParseFiles("app/templates/album.html")
+	tmpl, err = tmpl.ParseFiles("templates/album.html")
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, data)
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 // imageHandler обрабатывает отдачу изображений
@@ -189,9 +201,4 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	
 	// Отдаем файл
 	http.ServeFile(w, r, filePath)
-}
-
-// deleteHandler обрабатывает удаление изображений
-func deleteHandler(w http.ResponseWriter, r *http.Request) {
-	// Реализация будет добавлена в следующей фазе
 }

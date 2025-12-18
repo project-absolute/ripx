@@ -96,7 +96,11 @@ func cleanupUserImages(userDir string) error {
 		lastAccess := info.ModTime()
 		if isImageOld(lastAccess) {
 			// Удаляем старый файл
-			os.Remove(filePath)
+			err := os.Remove(filePath)
+			if err != nil {
+				// Игнорируем ошибку удаления, продолжаем очистку
+				continue
+			}
 		}
 	}
 	
@@ -135,7 +139,11 @@ func removeEmptyDirectories() error {
 		
 		if isEmpty {
 			// Удаляем пустую директорию пользователя
-			os.Remove(userDir)
+			err := os.Remove(userDir)
+			if err != nil {
+				// Игнорируем ошибку удаления, продолжаем очистку
+				continue
+			}
 		}
 	}
 	
