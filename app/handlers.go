@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // indexHandler обрабатывает главную страницу
@@ -85,8 +85,6 @@ func albumHandler(w http.ResponseWriter, r *http.Request) {
 		sessionID = cookie.Value
 	}
 	
-	log.Printf("[DEBUG albumHandler] SessionID: %s (cookie err: %v)", sessionID, err)
-	
 	// Получаем параметры пагинации из URL
 	page := 0
 	pageSize := 12 // Фиксированный размер страницы
@@ -105,10 +103,12 @@ func albumHandler(w http.ResponseWriter, r *http.Request) {
 		CurrentPage int
 		TotalPages int
 		HasPagination bool
+		SessionID string
 	}{
 		CurrentPage: page,
 		TotalPages: 0,
 		HasPagination: false,
+		SessionID: sessionID,
 	}
 	
 	// Получаем список изображений пользователя
@@ -178,40 +178,31 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Получаем имя файла из URL
-	filename := r.URL.Path[len("/image/"):]
-	if filename == "" {
-		log.Printf("[DEBUG imageHandler] Пустое имя файла")
+	// Получаем путь из URL (формат: /image/{sessionID}/{filename})
+	path := r.URL.Path[len("/image/"):]
+	if path == "" {
 		http.NotFound(w, r)
 		return
 	}
 	
-	log.Printf("[DEBUG imageHandler] Запрос изображения: filename=%s", filename)
-	
-	// Получаем ID сессии из cookie
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		log.Printf("[DEBUG imageHandler] Cookie отсутствует или ошибка: %v", err)
+	// Разбираем путь на sessionID и filename
+	parts := strings.SplitN(path, "/", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		http.NotFound(w, r)
 		return
 	}
-	sessionID := cookie.Value
 	
-	log.Printf("[DEBUG imageHandler] SessionID из cookie: %s", sessionID)
+	sessionID := parts[0]
+	filename := parts[1]
 	
 	// Формируем путь к файлу
 	filePath := "/data/" + sessionID + "/" + filename
 	
-	log.Printf("[DEBUG imageHandler] Путь к файлу: %s", filePath)
-	
 	// Проверяем существование файла
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		log.Printf("[DEBUG imageHandler] Файл не найден: %s", filePath)
 		http.NotFound(w, r)
 		return
 	}
-	
-	log.Printf("[DEBUG imageHandler] Файл найден, отправляем клиенту")
 	
 	// Отдаем файл
 	http.ServeFile(w, r, filePath)

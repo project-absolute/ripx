@@ -42,10 +42,10 @@ h1{color:#333;margin:0}
 <div class="image-grid" id="imageGrid">
 {{range .Images}}
 <div class="image-item">
-<img src="/image/{{.Filename}}" alt="{{.Filename}}">
+<img src="/image/{{$.SessionID}}/{{.Filename}}" alt="{{.Filename}}">
 <div class="image-info">
 <div class="image-name">{{.Filename}}</div>
-<button class="copy-btn" onclick="copyUrl('{{.Filename}}',this)">Копировать URL</button>
+<button class="copy-btn" onclick="copyUrl('{{$.SessionID}}','{{.Filename}}',this)">Копировать URL</button>
 </div>
 </div>
 {{end}}
@@ -76,8 +76,8 @@ h1{color:#333;margin:0}
 </div>
 {{end}}
 <script>
-function copyUrl(filename,button){
-const url=window.location.origin+'/image/'+filename;
+function copyUrl(sessionID,filename,button){
+const url=window.location.origin+'/image/'+sessionID+'/'+filename;
 if(navigator.clipboard){
 navigator.clipboard.writeText(url).then(function(){
 const originalText=button.textContent;
