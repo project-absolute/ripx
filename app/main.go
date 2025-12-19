@@ -27,7 +27,6 @@ func main() {
 	mux.HandleFunc("/upload", uploadHandler)
 	mux.HandleFunc("/album", albumHandler)
 	mux.HandleFunc("/image/", imageHandler)
-	mux.HandleFunc("/create-album", createAlbumHandler)
 	
 	// Запуск cleanup worker в отдельной goroutine
 	go startCleanupWorker(ctx)

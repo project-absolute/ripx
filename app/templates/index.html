@@ -30,38 +30,11 @@ input[type="file"]{display:none}
 .album-link{text-decoration:none;color:#333;font-weight:bold}
 .album-link:hover{color:#2196F3}
 .album-count{font-size:14px;color:#666;margin-top:5px}
-.create-album-form{margin:30px 0;padding:20px;background:#fff;border-radius:8px;border:1px solid #ddd}
-.create-album-title{font-size:18px;color:#333;margin-bottom:15px}
-.create-album-button{background:#4CAF50;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer}
-.create-album-button:hover{background:#45a049}
 </style>
 </head>
 <body>
 <h1>Хостинг изображений</h1>
 <p>Загрузите изображения для быстрого обмена</p>
-
-<!-- Форма создания нового альбома -->
-<div class="create-album-form">
-<div class="create-album-title">Создать новый альбом</div>
-<form action="/create-album" method="post">
-<button type="submit" class="create-album-button">Создать альбом</button>
-</form>
-</div>
-
-<!-- Список существующих альбомов -->
-{{if .HasAlbums}}
-<div class="albums-container">
-<div class="albums-title">Ваши альбомы</div>
-<div class="albums-list">
-{{range .Albums}}
-<div class="album-item">
-<a href="/album?id={{.ID}}" class="album-link">{{.Name}}</a>
-<div class="album-count">{{.ImageCount}} изображений</div>
-</div>
-{{end}}
-</div>
-</div>
-{{end}}
 
 <div class="upload-container">
 <div class="upload-area" id="uploadArea">
@@ -84,6 +57,22 @@ input[type="file"]{display:none}
 <button type="submit" class="upload-button" id="submitButton">Загрузить</button>
 </form>
 </div>
+
+<!-- Список существующих альбомов -->
+{{if .HasAlbums}}
+<div class="albums-container">
+<div class="albums-title">Ваши альбомы</div>
+<div class="albums-list">
+{{range .Albums}}
+<div class="album-item">
+<a href="/album?id={{.ID}}" class="album-link">{{.Name}}</a>
+<div class="album-count">{{.ImageCount}} изображений</div>
+</div>
+{{end}}
+</div>
+</div>
+{{end}}
+
 <script>
 document.addEventListener('DOMContentLoaded',function(){
 const uploadArea=document.getElementById('uploadArea');
@@ -93,12 +82,7 @@ const albumSelect=document.getElementById('albumSelect');
 uploadArea.addEventListener('click',function(){fileInput.click()});
 fileInput.addEventListener('change',function(){
 if(fileInput.files.length>0){
-// Проверяем, есть ли альбомы для выбора
-if(albumSelect && albumSelect.value){
 uploadForm.submit();
-}else{
-alert('Пожалуйста, создайте альбом перед загрузкой изображений');
-}
 }
 });
 uploadArea.addEventListener('dragover',function(e){e.preventDefault();uploadArea.classList.add('dragover')});
@@ -108,12 +92,7 @@ e.preventDefault();uploadArea.classList.remove('dragover');
 const files=e.dataTransfer.files;
 if(files.length>0){
 fileInput.files=files;
-// Проверяем, есть ли альбомы для выбора
-if(albumSelect && albumSelect.value){
 uploadForm.submit();
-}else{
-alert('Пожалуйста, создайте альбом перед загрузкой изображений');
-}
 }
 });
 });

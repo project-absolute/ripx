@@ -75,9 +75,15 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	
 	// Получаем album_id из формы
 	albumID := r.FormValue("album_id")
+	
+	// Если album_id не указан, создаем новый альбом автоматически
 	if albumID == "" {
-		http.Error(w, "album_id required", http.StatusBadRequest)
-		return
+		newAlbumID, err := createAlbum(sessionID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error creating album: %v", err), http.StatusInternalServerError)
+			return
+		}
+		albumID = newAlbumID
 	}
 	
 	// Получаем файл из формы
@@ -246,23 +252,3 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filePath)
 }
 
-// createAlbumHandler обрабатывает создание нового альбома
-func createAlbumHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	
-	// Получаем ID сессии пользователя
-	sessionID := getSessionID(w, r)
-	
-	// Создаем новый альбом
-	albumID, err := createAlbum(sessionID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error creating album: %v", err), http.StatusInternalServerError)
-		return
-	}
-	
-	// Перенаправляем на страницу альбома
-	http.Redirect(w, r, "/album?id="+albumID, http.StatusSeeOther)
-}
