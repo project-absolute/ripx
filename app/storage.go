@@ -42,16 +42,20 @@ func generateUniqueFilename(originalFilename string, extension string) string {
 		ext = ".jpg" // расширение по умолчанию
 	}
 	
-	bytes := make([]byte, 16)
+	// Генерируем 4-символьный hex ID (2 байта)
+	bytes := make([]byte, 2)
 	_, err := rand.Read(bytes)
+	var randomString string
 	if err != nil {
 		// В случае ошибки генерации случайных данных, используем timestamp
-		randomString := fmt.Sprintf("%d", time.Now().UnixNano())
-		return randomString + ext
+		randomString = fmt.Sprintf("%04x", time.Now().UnixNano()%65536)
+	} else {
+		randomString = hex.EncodeToString(bytes)
 	}
 	
-	randomString := hex.EncodeToString(bytes)
-	return randomString + ext
+	filename := randomString + ext
+	fmt.Printf("[DEBUG] Generated filename: %s\n", filename)
+	return filename
 }
 
 // validateImageType проверяет тип изображения
@@ -228,16 +232,18 @@ func getSessionID(w http.ResponseWriter, r *http.Request) string {
 		return cookie.Value
 	}
 	
-	// Генерируем новый ID сессии
-	bytes := make([]byte, 16)
+	// Генерируем новый ID сессии (4 символа hex = 2 байта)
+	bytes := make([]byte, 2)
 	_, err = rand.Read(bytes)
 	var sessionID string
 	if err != nil {
 		// В случае ошибки генерации случайных данных, используем timestamp
-		sessionID = fmt.Sprintf("%d", time.Now().UnixNano())
+		sessionID = fmt.Sprintf("%04x", time.Now().UnixNano()%65536)
 	} else {
 		sessionID = hex.EncodeToString(bytes)
 	}
+	
+	fmt.Printf("[DEBUG] Generated sessionID: %s\n", sessionID)
 	
 	// Устанавливаем cookie
 	http.SetCookie(w, &http.Cookie{
