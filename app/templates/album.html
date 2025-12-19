@@ -35,17 +35,17 @@ h1{color:#333;margin:0}
 </head>
 <body>
 <div class="header">
-<h1>Мой альбом изображений</h1>
-<a href="/" class="upload-more">Загрузить еще</a>
+<h1>Альбом: {{.AlbumID}}</h1>
+<a href="/" class="upload-more">На главную</a>
 </div>
 {{if .HasImages}}
 <div class="image-grid" id="imageGrid">
 {{range .Images}}
 <div class="image-item">
-<img src="/image/{{$.SessionID}}/{{.Filename}}" alt="{{.Filename}}">
+<img src="/image/{{$.SessionID}}/{{$.AlbumID}}/{{.Filename}}" alt="{{.Filename}}">
 <div class="image-info">
 <div class="image-name">{{.Filename}}</div>
-<button class="copy-btn" onclick="copyUrl('{{$.SessionID}}','{{.Filename}}',this)">Копировать URL</button>
+<button class="copy-btn" onclick="copyUrl('{{$.SessionID}}','{{$.AlbumID}}','{{.Filename}}',this)">Копировать URL</button>
 </div>
 </div>
 {{end}}
@@ -76,8 +76,8 @@ h1{color:#333;margin:0}
 </div>
 {{end}}
 <script>
-function copyUrl(sessionID,filename,button){
-const url=window.location.origin+'/image/'+sessionID+'/'+filename;
+function copyUrl(sessionID,albumID,filename,button){
+const url=window.location.origin+'/image/'+sessionID+'/'+albumID+'/'+filename;
 if(navigator.clipboard){
 navigator.clipboard.writeText(url).then(function(){
 const originalText=button.textContent;

@@ -30,6 +30,14 @@ type ImageInfo struct {
 	Path     string
 	Size     int64
 	UserID   string
+	AlbumID  string
+}
+
+// AlbumInfo хранит информацию об альбоме
+type AlbumInfo struct {
+	ID         string
+	Name       string
+	ImageCount int
 }
 
 // generateUniqueFilename генерирует уникальное имя файла
@@ -98,7 +106,7 @@ func validateImageType(file multipart.File) (string, bool) {
 }
 
 // saveImage сохраняет загруженное изображение
-func saveImage(file multipart.File, header *multipart.FileHeader, userID string) (*ImageInfo, error) {
+func saveImage(file multipart.File, header *multipart.FileHeader, userID string, albumID string) (*ImageInfo, error) {
 	// Проверяем размер файла
 	if header.Size > maxFileSize {
 		return nil, fmt.Errorf("file too large: %d bytes", header.Size)
@@ -110,8 +118,8 @@ func saveImage(file multipart.File, header *multipart.FileHeader, userID string)
 		return nil, fmt.Errorf("invalid image type")
 	}
 	
-	// Создаем директорию пользователя если она не существует
-	err := ensureUserDir(userID)
+	// Создаем директорию для альбома если она не существует
+	err := ensureAlbumDir(userID, albumID)
 	if err != nil {
 		return nil, err
 	}
@@ -119,8 +127,8 @@ func saveImage(file multipart.File, header *multipart.FileHeader, userID string)
 	// Генерируем уникальное имя файла
 	filename := generateUniqueFilename(header.Filename, extension)
 	
-	// Путь для сохранения в директории пользователя
-	path := filepath.Join("/data", userID, filename)
+	// Путь для сохранения в директории альбома
+	path := filepath.Join("/data", userID, albumID, filename)
 	
 	// Создаем файл для записи
 	dst, err := os.Create(path)
@@ -147,6 +155,7 @@ func saveImage(file multipart.File, header *multipart.FileHeader, userID string)
 		Path:     path,
 		Size:     stat.Size(),
 		UserID:   userID,
+		AlbumID:  albumID,
 	}
 	
 	return imageInfo, nil
@@ -154,21 +163,28 @@ func saveImage(file multipart.File, header *multipart.FileHeader, userID string)
 
 // getUserImages возвращает список изображений пользователя
 func getUserImages(userID string) ([]ImageInfo, error) {
-	return getUserImagesPaginated(userID, 0, 0)
+	return getUserImagesPaginated(userID, "", 0, 0)
 }
 
 // getUserImagesPaginated возвращает список изображений пользователя с пагинацией
 // Если pageSize <= 0, возвращает все изображения
-func getUserImagesPaginated(userID string, page, pageSize int) ([]ImageInfo, error) {
-	userDir := filepath.Join("/data", userID)
+func getUserImagesPaginated(userID string, albumID string, page, pageSize int) ([]ImageInfo, error) {
+	var dirPath string
+	
+	// Если albumID указан, используем директорию альбома, иначе директорию пользователя
+	if albumID != "" {
+		dirPath = filepath.Join("/data", userID, albumID)
+	} else {
+		dirPath = filepath.Join("/data", userID)
+	}
 	
 	// Проверяем существование директории
-	if _, err := os.Stat(userDir); os.IsNotExist(err) {
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
 		return []ImageInfo{}, nil
 	}
 	
 	// Читаем содержимое директории
-	entries, err := os.ReadDir(userDir)
+	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +210,7 @@ func getUserImagesPaginated(userID string, page, pageSize int) ([]ImageInfo, err
 		}
 		
 		// Создаем путь к файлу
-		path := filepath.Join(userDir, filename)
+		path := filepath.Join(dirPath, filename)
 		
 		// Добавляем в список
 		images = append(images, ImageInfo{
@@ -202,6 +218,7 @@ func getUserImagesPaginated(userID string, page, pageSize int) ([]ImageInfo, err
 			Path:     path,
 			Size:     info.Size(),
 			UserID:   userID,
+			AlbumID:  albumID,
 		})
 	}
 	
@@ -266,4 +283,88 @@ func ensureDataDir() error {
 // ensureUserDir создает директорию для пользователя если она не существует
 func ensureUserDir(userID string) error {
 	return os.MkdirAll(filepath.Join("/data", userID), 0755)
+}
+
+// ensureAlbumDir создает директорию для альбома пользователя если она не существует
+func ensureAlbumDir(userID, albumID string) error {
+	return os.MkdirAll(filepath.Join("/data", userID, albumID), 0755)
+}
+
+// getUserAlbums возвращает список альбомов пользователя
+func getUserAlbums(userID string) ([]AlbumInfo, error) {
+	userDir := filepath.Join("/data", userID)
+	
+	// Проверяем существование директории
+	if _, err := os.Stat(userDir); os.IsNotExist(err) {
+		return []AlbumInfo{}, nil
+	}
+	
+	// Читаем содержимое директории
+	entries, err := os.ReadDir(userDir)
+	if err != nil {
+		return nil, err
+	}
+	
+	var albums []AlbumInfo
+	for _, entry := range entries {
+		// Нас интересуют только директории (альбомы)
+		if !entry.IsDir() {
+			continue
+		}
+		
+		albumID := entry.Name()
+		albumDir := filepath.Join(userDir, albumID)
+		
+		// Подсчитываем количество файлов в директории альбома
+		albumEntries, err := os.ReadDir(albumDir)
+		if err != nil {
+			continue
+		}
+		
+		imageCount := 0
+		for _, albumEntry := range albumEntries {
+			// Пропускаем поддиректории
+			if albumEntry.IsDir() {
+				continue
+			}
+			
+			// Проверяем, что файл является изображением по расширению
+			filename := albumEntry.Name()
+			ext := strings.ToLower(filepath.Ext(filename))
+			if ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" || ext == ".webp" {
+				imageCount++
+			}
+		}
+		
+		// Добавляем альбом в список
+		albums = append(albums, AlbumInfo{
+			ID:         albumID,
+			Name:       albumID, // Пока используем ID как имя
+			ImageCount: imageCount,
+		})
+	}
+	
+	return albums, nil
+}
+
+// createAlbum создает новый альбом для пользователя
+func createAlbum(userID string) (string, error) {
+	// Генерируем 4-символьный hex ID (2 байта)
+	bytes := make([]byte, 2)
+	_, err := rand.Read(bytes)
+	var albumID string
+	if err != nil {
+		// В случае ошибки генерации случайных данных, используем timestamp
+		albumID = fmt.Sprintf("%04x", time.Now().UnixNano()%65536)
+	} else {
+		albumID = hex.EncodeToString(bytes)
+	}
+	
+	// Создаем директорию для альбома
+	err = ensureAlbumDir(userID, albumID)
+	if err != nil {
+		return "", err
+	}
+	
+	return albumID, nil
 }

@@ -17,13 +17,34 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	if r.Method == "GET" {
+		// Получаем ID сессии пользователя
+		sessionID := getSessionID(w, r)
+		
+		// Получаем список альбомов пользователя
+		albums, err := getUserAlbums(sessionID)
+		if err != nil {
+			// В случае ошибки продолжаем с пустым списком
+			albums = []AlbumInfo{}
+		}
+		
+		// Структура для передачи данных в шаблон
+		data := struct {
+			Albums    []AlbumInfo
+			HasAlbums bool
+			SessionID string
+		}{
+			Albums:    albums,
+			HasAlbums: len(albums) > 0,
+			SessionID: sessionID,
+		}
+		
 		// Отображаем главную страницу
 		tmpl, err := template.ParseFiles("templates/index.html")
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		err = tmpl.Execute(w, nil)
+		err = tmpl.Execute(w, data)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
@@ -52,6 +73,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
+	// Получаем album_id из формы
+	albumID := r.FormValue("album_id")
+	if albumID == "" {
+		http.Error(w, "album_id required", http.StatusBadRequest)
+		return
+	}
+	
 	// Получаем файл из формы
 	file, header, err := r.FormFile("image")
 	if err != nil {
@@ -61,14 +89,14 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	
 	// Сохраняем изображение
-	_, err = saveImage(file, header, sessionID)
+	_, err = saveImage(file, header, sessionID, albumID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error saving image: %v", err), http.StatusInternalServerError)
 		return
 	}
 	
 	// Перенаправляем на страницу альбома
-	http.Redirect(w, r, "/album", http.StatusSeeOther)
+	http.Redirect(w, r, "/album?id="+albumID, http.StatusSeeOther)
 }
 
 // albumHandler обрабатывает страницу альбома
@@ -83,6 +111,13 @@ func albumHandler(w http.ResponseWriter, r *http.Request) {
 	var sessionID string
 	if err == nil && cookie.Value != "" {
 		sessionID = cookie.Value
+	}
+	
+	// Получаем album_id из query параметра
+	albumID := r.URL.Query().Get("id")
+	if albumID == "" {
+		http.Error(w, "album_id required", http.StatusBadRequest)
+		return
 	}
 	
 	// Получаем параметры пагинации из URL
@@ -104,17 +139,19 @@ func albumHandler(w http.ResponseWriter, r *http.Request) {
 		TotalPages int
 		HasPagination bool
 		SessionID string
+		AlbumID string
 	}{
 		CurrentPage: page,
 		TotalPages: 0,
 		HasPagination: false,
 		SessionID: sessionID,
+		AlbumID: albumID,
 	}
 	
 	// Получаем список изображений пользователя
 	if sessionID != "" {
 		// Сначала получаем все изображения для подсчета общего количества
-		allImages, err := getUserImages(sessionID)
+		allImages, err := getUserImagesPaginated(sessionID, albumID, 0, 0)
 		if err != nil {
 			// В случае ошибки, просто продолжаем с пустым списком
 			allImages = []ImageInfo{}
@@ -135,7 +172,7 @@ func albumHandler(w http.ResponseWriter, r *http.Request) {
 			data.CurrentPage = page
 			
 			// Получаем изображения для текущей страницы
-			data.Images, err = getUserImagesPaginated(sessionID, page, pageSize)
+			data.Images, err = getUserImagesPaginated(sessionID, albumID, page, pageSize)
 			if err != nil {
 				data.Images = []ImageInfo{}
 			}
@@ -178,25 +215,26 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	// Получаем путь из URL (формат: /image/{sessionID}/{filename})
+	// Получаем путь из URL (формат: /image/{sessionID}/{albumID}/{filename})
 	path := r.URL.Path[len("/image/"):]
 	if path == "" {
 		http.NotFound(w, r)
 		return
 	}
 	
-	// Разбираем путь на sessionID и filename
-	parts := strings.SplitN(path, "/", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+	// Разбираем путь на sessionID, albumID и filename
+	parts := strings.SplitN(path, "/", 3)
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		http.NotFound(w, r)
 		return
 	}
 	
 	sessionID := parts[0]
-	filename := parts[1]
+	albumID := parts[1]
+	filename := parts[2]
 	
 	// Формируем путь к файлу
-	filePath := "/data/" + sessionID + "/" + filename
+	filePath := "/data/" + sessionID + "/" + albumID + "/" + filename
 	
 	// Проверяем существование файла
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -206,4 +244,25 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	
 	// Отдаем файл
 	http.ServeFile(w, r, filePath)
+}
+
+// createAlbumHandler обрабатывает создание нового альбома
+func createAlbumHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	// Получаем ID сессии пользователя
+	sessionID := getSessionID(w, r)
+	
+	// Создаем новый альбом
+	albumID, err := createAlbum(sessionID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error creating album: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Перенаправляем на страницу альбома
+	http.Redirect(w, r, "/album?id="+albumID, http.StatusSeeOther)
 }
