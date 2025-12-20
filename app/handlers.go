@@ -164,20 +164,22 @@ func contentHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("[DEBUG] contentHandler: albumID=%s, ownerSessionID=%s, currentSessionID=%s, isOwner=%v\n",
 			albumID, sessionID, currentSessionID, isOwner)
 		
-		// Отображаем страницу альбома
+		// Отображаем страницы альбома
 		data := struct {
-			Images    []ImageInfo
-			HasImages bool
-			SessionID string
-			AlbumID   string
-			IsOwner   bool
+			Images         []ImageInfo
+			HasImages      bool
+			SessionID      string
+			OwnerSessionID string
+			AlbumID        string
+			IsOwner        bool
 		}{
-			SessionID: currentSessionID,
-			AlbumID:   albumID,
-			IsOwner:   isOwner,
+			SessionID:      currentSessionID,
+			OwnerSessionID: sessionID,
+			AlbumID:        albumID,
+			IsOwner:        isOwner,
 		}
 		
-		// Получаем все изображения альбома
+		// Получаем все изображения альбома (используем sessionID владельца)
 		images, err := getUserImagesPaginated(sessionID, albumID, 0, 0)
 		if err != nil {
 			images = []ImageInfo{}

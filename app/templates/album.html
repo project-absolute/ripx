@@ -49,11 +49,11 @@ h1{color:#333;margin:0}
 <div class="image-grid" id="imageGrid">
 {{range .Images}}
 <div class="image-item">
-<img src="/{{$.SessionID}}/{{$.AlbumID}}/{{.Filename}}" alt="{{.Filename}}">
+<img src="/{{$.OwnerSessionID}}/{{$.AlbumID}}/{{.Filename}}" alt="{{.Filename}}">
 <div class="image-info">
 <div class="image-name">{{.Filename}}</div>
 <div>
-<button class="copy-btn" onclick="copyUrl('{{$.SessionID}}','{{$.AlbumID}}','{{.Filename}}',this)">Копировать URL</button>
+<button class="copy-btn" onclick="copyUrl('{{$.OwnerSessionID}}','{{$.AlbumID}}','{{.Filename}}',this)">Копировать URL</button>
 {{if $.IsOwner}}
 <button class="delete-btn" onclick="deleteImage('{{$.SessionID}}','{{$.AlbumID}}','{{.Filename}}',this)">Удалить</button>
 {{end}}
