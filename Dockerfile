@@ -10,7 +10,7 @@ COPY go.mod .
 COPY app/ .
 
 # Собираем приложение
-RUN CGO_ENABLED=0 GOOS=linux go build -o imagehost .
+RUN CGO_ENABLED=0 GOOS=linux go build -o ripx .
 
 # Финальный образ
 FROM alpine:latest
@@ -21,7 +21,7 @@ WORKDIR /app
 RUN mkdir -p /data
 
 # Копируем бинарник из этапа сборки
-COPY --from=builder /app/imagehost .
+COPY --from=builder /app/ripx .
 
 # Копируем шаблоны
 COPY --from=builder /app/templates ./templates
@@ -30,4 +30,4 @@ COPY --from=builder /app/templates ./templates
 EXPOSE 8000
 
 # Запускаем приложение
-CMD ["./imagehost"]
+CMD ["./ripx"]
