@@ -16,8 +16,6 @@ h1{color:#333;text-align:center}
 .upload-hint{font-size:14px;color:#999}
 form{margin-top:20px}
 input[type="file"]{display:none}
-.album-select{margin-bottom:15px}
-.album-select select{padding:8px;border:1px solid #ddd;border-radius:4px;width:100%}
 .albums-container{margin:30px 0}
 .albums-title{font-size:20px;color:#333;margin-bottom:15px}
 .albums-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px}
@@ -39,20 +37,12 @@ input[type="file"]{display:none}
 <div class="upload-hint">или нажмите для выбора файлов</div>
 </div>
 <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
-{{if .HasAlbums}}
-<div class="album-select">
-<select name="album_id" id="albumSelect">
-{{range .Albums}}
-<option value="{{.ID}}">{{.Name}} ({{.ImageCount}} изображений)</option>
-{{end}}
-</select>
-</div>
-{{end}}
 <input type="file" name="image" accept="image/*" multiple id="fileInput">
 </form>
 </div>
 
 <!-- Список существующих альбомов -->
+{{if .HasAlbums}}
 <div class="albums-container">
 <div class="albums-title">Ваши альбомы</div>
 <div class="albums-list">
@@ -64,6 +54,7 @@ input[type="file"]{display:none}
 {{end}}
 </div>
 </div>
+{{end}}
 
 <script>
 document.addEventListener('DOMContentLoaded',function(){
