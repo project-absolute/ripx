@@ -156,6 +156,55 @@
       background: #45a049
     }
 
+    .upload-container {
+      margin: 30px 0
+    }
+
+    .upload-area {
+      border: 3px dashed #555;
+      border-radius: 10px;
+      padding: 40px;
+      text-align: center;
+      margin: 20px 0;
+      background: #2d2d2d;
+      cursor: pointer
+    }
+
+    .upload-area:hover {
+      border-color: #777;
+      background: #3d3d3d
+    }
+
+    .upload-area.dragover {
+      border-color: #4CAF50;
+      background: #2e4d2e
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      color: #777;
+      margin-bottom: 15px
+    }
+
+    .upload-text {
+      font-size: 18px;
+      color: #cccccc;
+      margin-bottom: 15px
+    }
+
+    .upload-hint {
+      font-size: 14px;
+      color: #999
+    }
+
+    form {
+      margin-top: 20px
+    }
+
+    input[type="file"] {
+      display: none
+    }
+
     @media(max-width:768px) {
       .header {
         flex-direction: column;
@@ -180,6 +229,20 @@
       {{end}}
     </div>
   </div>
+  
+  {{if .IsOwner}}
+  <div class="upload-container">
+    <div class="upload-area" id="uploadArea">
+      <div class="upload-icon">📁</div>
+      <div class="upload-text">Перетащите изображения сюда</div>
+      <div class="upload-hint">или нажмите для выбора файлов</div>
+    </div>
+    <form action="/upload" method="post" enctype="multipart/form-data" id="imageUploadForm">
+      <input type="hidden" name="album_id" value="{{.AlbumID}}">
+      <input type="file" name="image" accept="image/*" multiple id="fileInput">
+    </form>
+  </div>
+  {{end}}
   {{if .HasImages}}
   <div class="image-grid" id="imageGrid">
     {{range .Images}}
@@ -207,6 +270,31 @@
   </div>
   {{end}}
   <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const uploadArea = document.getElementById('uploadArea');
+      const fileInput = document.getElementById('fileInput');
+      const uploadForm = document.getElementById('imageUploadForm');
+      
+      if (uploadArea && fileInput && uploadForm) {
+        uploadArea.addEventListener('click', function () { fileInput.click() });
+        fileInput.addEventListener('change', function () {
+          if (fileInput.files.length > 0) {
+            uploadForm.submit();
+          }
+        });
+        uploadArea.addEventListener('dragover', function (e) { e.preventDefault(); uploadArea.classList.add('dragover') });
+        uploadArea.addEventListener('dragleave', function (e) { e.preventDefault(); uploadArea.classList.remove('dragover') });
+        uploadArea.addEventListener('drop', function (e) {
+          e.preventDefault(); uploadArea.classList.remove('dragover');
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            fileInput.files = files;
+            uploadForm.submit();
+          }
+        });
+      }
+    });
+
     function copyUrl(sessionID, albumID, filename, button) {
       const url = window.location.origin + '/' + sessionID + '/' + albumID + '/' + filename;
       if (navigator.clipboard) {
