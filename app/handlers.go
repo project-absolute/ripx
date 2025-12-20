@@ -215,14 +215,10 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	filePath := "/data/" + sessionID + "/" + albumID + "/" + filename
 	
 	// Проверяем существование файла
-	fileInfo, err := os.Stat(filePath)
-	if os.IsNotExist(err) {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		http.NotFound(w, r)
 		return
 	}
-	
-	// [DEBUG LOG] Логируем размер отдаваемого файла
-	fmt.Printf("[DEBUG] imageHandler: отдаём файл=%s размер=%d байт\n", filename, fileInfo.Size())
 	
 	// Отдаем файл
 	http.ServeFile(w, r, filePath)
