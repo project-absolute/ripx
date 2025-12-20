@@ -26,6 +26,9 @@ COPY --from=builder /app/ripx .
 # Копируем шаблоны
 COPY --from=builder /app/templates ./templates
 
+# Копируем статические файлы
+COPY --from=builder /app/templates/static ./templates/static
+
 # Открываем порт
 EXPOSE 8000
 
