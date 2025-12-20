@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,6 +26,9 @@ func main() {
 	
 	// Статические файлы с правильным MIME типом
 	mux.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+		// Добавляем логирование для диагностики
+		fmt.Printf("[DEBUG] Static file request: %s\n", r.URL.Path)
+		
 		// Определяем MIME тип на основе расширения файла
 		ext := filepath.Ext(r.URL.Path)
 		switch ext {
@@ -42,8 +46,17 @@ func main() {
 			w.Header().Set("Content-Type", "image/svg+xml")
 		}
 		
-		// Убираем префикс /static/ из пути
-		filePath := r.URL.Path[1:] // убираем первый /
+		// Убираем префикс /static/ из пути и добавляем правильный путь к шаблонам
+		filePath := "templates" + r.URL.Path // добавляем templates/
+		fmt.Printf("[DEBUG] Looking for file at path: %s\n", filePath)
+		
+		// Проверяем существование файла
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			fmt.Printf("[DEBUG] File not found: %s\n", filePath)
+			http.NotFound(w, r)
+			return
+		}
+		
 		http.ServeFile(w, r, filePath)
 	})
 	
