@@ -18,6 +18,10 @@ h1{color:#333;margin:0}
 .copy-btn{background:#2196F3;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px}
 .copy-btn:hover{background:#0b7dda}
 .copy-btn.copied{background:#4CAF50}
+.delete-btn{background:#f44336;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:5px}
+.delete-btn:hover{background:#d32f2f}
+.delete-album-btn{background:#ff5722;color:white;border:none;padding:10px 20px;border-radius:4px;cursor:pointer;text-decoration:none}
+.delete-album-btn:hover{background:#e64a19}
 .empty-state{text-align:center;padding:60px 20px;background:#fff;border-radius:8px}
 .empty-icon{font-size:64px;margin-bottom:20px;color:#ccc}
 .empty-text{font-size:18px;color:#666;margin-bottom:20px}
@@ -31,7 +35,13 @@ h1{color:#333;margin:0}
 <body>
 <div class="header">
 <h1>Альбом: {{.AlbumID}}</h1>
+<div>
 <a href="/" class="upload-more">На главную</a>
+<form action="/delete-album" method="POST" style="display:inline;" onsubmit="return confirm('Вы уверены, что хотите удалить весь альбом со всеми изображениями?')">
+<input type="hidden" name="album_id" value="{{.AlbumID}}">
+<button type="submit" class="delete-album-btn">Удалить альбом</button>
+</form>
+</div>
 </div>
 {{if .HasImages}}
 <div class="image-grid" id="imageGrid">
@@ -40,7 +50,10 @@ h1{color:#333;margin:0}
 <img src="/image/{{$.SessionID}}/{{$.AlbumID}}/{{.Filename}}" alt="{{.Filename}}">
 <div class="image-info">
 <div class="image-name">{{.Filename}}</div>
+<div>
 <button class="copy-btn" onclick="copyUrl('{{$.SessionID}}','{{$.AlbumID}}','{{.Filename}}',this)">Копировать URL</button>
+<button class="delete-btn" onclick="deleteImage('{{$.SessionID}}','{{$.AlbumID}}','{{.Filename}}',this)">Удалить</button>
+</div>
 </div>
 </div>
 {{end}}
@@ -77,6 +90,44 @@ setTimeout(function(){button.textContent=originalText;button.classList.remove('c
 }catch(err){console.error('Не удалось скопировать URL: ',err)}
 document.body.removeChild(textArea);
 }
+}
+
+function deleteImage(sessionID,albumID,filename,button){
+	if(!confirm('Вы уверены, что хотите удалить это изображение?')){
+		return;
+	}
+	
+	const formData=new FormData();
+	formData.append('album_id',albumID);
+	formData.append('filename',filename);
+	
+	fetch('/delete-image',{
+		method:'POST',
+		body:formData
+	})
+	.then(response=>{
+		if(response.ok){
+			// Удаляем элемент изображения из DOM
+			const imageItem=button.closest('.image-item');
+			imageItem.style.opacity='0.5';
+			setTimeout(()=>{
+				imageItem.remove();
+				// Проверяем, остались ли изображения
+				const remainingImages=document.querySelectorAll('.image-item');
+				if(remainingImages.length===0){
+					// Показываем пустое состояние
+					const imageGrid=document.getElementById('imageGrid');
+					imageGrid.innerHTML='<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-text">У вас пока нет загруженных изображений</div><a href="/" class="empty-link">Загрузить первое изображение</a></div>';
+				}
+			},300);
+		}else{
+			alert('Ошибка при удалении изображения');
+		}
+	})
+	.catch(error=>{
+		console.error('Error:',error);
+		alert('Ошибка при удалении изображения');
+	});
 }
 </script>
 </body>

@@ -373,3 +373,39 @@ func createAlbum(userID string) (string, error) {
 	
 	return albumID, nil
 }
+
+// deleteImage удаляет изображение
+func deleteImage(userID, albumID, filename string) error {
+	filePath := filepath.Join("/data", userID, albumID, filename)
+	
+	// Проверяем существование файла
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return fmt.Errorf("image not found")
+	}
+	
+	// Удаляем файл
+	err := os.Remove(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to delete image: %v", err)
+	}
+	
+	return nil
+}
+
+// deleteAlbum удаляет весь альбом со всеми изображениями
+func deleteAlbum(userID, albumID string) error {
+	albumPath := filepath.Join("/data", userID, albumID)
+	
+	// Проверяем существование директории
+	if _, err := os.Stat(albumPath); os.IsNotExist(err) {
+		return fmt.Errorf("album not found")
+	}
+	
+	// Удаляем директорию со всем содержимым
+	err := os.RemoveAll(albumPath)
+	if err != nil {
+		return fmt.Errorf("failed to delete album: %v", err)
+	}
+	
+	return nil
+}

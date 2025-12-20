@@ -224,3 +224,63 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filePath)
 }
 
+// deleteImageHandler обрабатывает удаление изображения
+func deleteImageHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	// Получаем ID сессии из cookie
+	sessionID := getSessionID(w, r)
+	
+	// Получаем параметры из формы
+	albumID := r.FormValue("album_id")
+	filename := r.FormValue("filename")
+	
+	if albumID == "" || filename == "" {
+		http.Error(w, "album_id and filename required", http.StatusBadRequest)
+		return
+	}
+	
+	// Удаляем изображение
+	err := deleteImage(sessionID, albumID, filename)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error deleting image: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Возвращаем успешный ответ
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Image deleted successfully")
+}
+
+// deleteAlbumHandler обрабатывает удаление альбома
+func deleteAlbumHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
+	// Получаем ID сессии из cookie
+	sessionID := getSessionID(w, r)
+	
+	// Получаем album_id из формы
+	albumID := r.FormValue("album_id")
+	
+	if albumID == "" {
+		http.Error(w, "album_id required", http.StatusBadRequest)
+		return
+	}
+	
+	// Удаляем альбом
+	err := deleteAlbum(sessionID, albumID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error deleting album: %v", err), http.StatusInternalServerError)
+		return
+	}
+	
+	// Перенаправляем на главную страницу
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
