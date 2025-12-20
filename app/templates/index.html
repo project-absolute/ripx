@@ -16,10 +16,6 @@ h1{color:#333;text-align:center}
 .upload-hint{font-size:14px;color:#999}
 form{margin-top:20px}
 input[type="file"]{display:none}
-.file-input-label{display:inline-block;padding:10px 20px;background:#4CAF50;color:white;border-radius:4px;cursor:pointer}
-.file-input-label:hover{background:#45a049}
-.upload-button{background:#2196F3;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;margin-left:10px}
-.upload-button:hover{background:#0b7dda}
 .album-select{margin-bottom:15px}
 .album-select select{padding:8px;border:1px solid #ddd;border-radius:4px;width:100%}
 .albums-container{margin:30px 0}
@@ -53,13 +49,10 @@ input[type="file"]{display:none}
 </div>
 {{end}}
 <input type="file" name="image" accept="image/*" multiple id="fileInput">
-<label for="fileInput" class="file-input-label">Выбрать файлы</label>
-<button type="submit" class="upload-button" id="submitButton">Загрузить</button>
 </form>
 </div>
 
 <!-- Список существующих альбомов -->
-{{if .HasAlbums}}
 <div class="albums-container">
 <div class="albums-title">Ваши альбомы</div>
 <div class="albums-list">
@@ -71,14 +64,12 @@ input[type="file"]{display:none}
 {{end}}
 </div>
 </div>
-{{end}}
 
 <script>
 document.addEventListener('DOMContentLoaded',function(){
 const uploadArea=document.getElementById('uploadArea');
 const fileInput=document.getElementById('fileInput');
 const uploadForm=document.getElementById('uploadForm');
-const albumSelect=document.getElementById('albumSelect');
 uploadArea.addEventListener('click',function(){fileInput.click()});
 fileInput.addEventListener('change',function(){
 if(fileInput.files.length>0){
