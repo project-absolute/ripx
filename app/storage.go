@@ -325,8 +325,11 @@ func getUserAlbums(userID string) ([]AlbumInfo, error) {
 		dirInfo, err := os.Stat(albumDir)
 		var createdAt time.Time
 		if err == nil {
-			createdAt = dirInfo.ModTime()
-			fmt.Printf("[DEBUG] getUserAlbums: album %s created at %v\n", albumID, createdAt)
+			// Конвертируем UTC время в Московское (UTC+3)
+			utcTime := dirInfo.ModTime()
+			moscowTime := utcTime.Add(3 * time.Hour)
+			createdAt = moscowTime
+			fmt.Printf("[DEBUG] getUserAlbums: album %s created at %v (UTC) -> %v (MSK)\n", albumID, utcTime, moscowTime)
 		} else {
 			fmt.Printf("[DEBUG] getUserAlbums: failed to get stat for album %s: %v\n", albumID, err)
 			createdAt = time.Time{} // zero time
