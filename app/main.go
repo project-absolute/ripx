@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 )
 
@@ -23,9 +24,27 @@ func main() {
 	mux := http.NewServeMux()
 	
 	// Статические файлы с правильным MIME типом
-	mux.HandleFunc("/static/styles.css", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/css")
-		http.ServeFile(w, r, "app/templates/static/styles.css")
+	mux.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+		// Определяем MIME тип на основе расширения файла
+		ext := filepath.Ext(r.URL.Path)
+		switch ext {
+		case ".css":
+			w.Header().Set("Content-Type", "text/css")
+		case ".js":
+			w.Header().Set("Content-Type", "application/javascript")
+		case ".png":
+			w.Header().Set("Content-Type", "image/png")
+		case ".jpg", ".jpeg":
+			w.Header().Set("Content-Type", "image/jpeg")
+		case ".gif":
+			w.Header().Set("Content-Type", "image/gif")
+		case ".svg":
+			w.Header().Set("Content-Type", "image/svg+xml")
+		}
+		
+		// Убираем префикс /static/ из пути
+		filePath := r.URL.Path[1:] // убираем первый /
+		http.ServeFile(w, r, filePath)
 	})
 	
 	// Регистрация обработчиков
