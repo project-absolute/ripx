@@ -38,6 +38,7 @@ type AlbumInfo struct {
 	ID         string
 	Name       string
 	ImageCount int
+	CreatedAt  time.Time
 }
 
 // generateUniqueFilename генерирует уникальное имя файла
@@ -320,6 +321,17 @@ func getUserAlbums(userID string) ([]AlbumInfo, error) {
 		albumID := entry.Name()
 		albumDir := filepath.Join(userDir, albumID)
 		
+		// Получаем информацию о директории для определения даты создания
+		dirInfo, err := os.Stat(albumDir)
+		var createdAt time.Time
+		if err == nil {
+			createdAt = dirInfo.ModTime()
+			fmt.Printf("[DEBUG] getUserAlbums: album %s created at %v\n", albumID, createdAt)
+		} else {
+			fmt.Printf("[DEBUG] getUserAlbums: failed to get stat for album %s: %v\n", albumID, err)
+			createdAt = time.Time{} // zero time
+		}
+		
 		// Подсчитываем количество файлов в директории альбома
 		albumEntries, err := os.ReadDir(albumDir)
 		if err != nil {
@@ -346,6 +358,7 @@ func getUserAlbums(userID string) ([]AlbumInfo, error) {
 			ID:         albumID,
 			Name:       albumID, // Пока используем ID как имя
 			ImageCount: imageCount,
+			CreatedAt:  createdAt,
 		})
 	}
 	
