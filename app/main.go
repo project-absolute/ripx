@@ -22,9 +22,11 @@ func main() {
 	// Настройка маршрутов
 	mux := http.NewServeMux()
 	
-	// Статические файлы
-	fs := http.FileServer(http.Dir("app/templates/static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	// Статические файлы с правильным MIME типом
+	mux.HandleFunc("/static/styles.css", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css")
+		http.ServeFile(w, r, "app/templates/static/styles.css")
+	})
 	
 	// Регистрация обработчиков
 	mux.HandleFunc("/", indexHandler)
