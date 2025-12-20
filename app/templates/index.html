@@ -24,11 +24,16 @@ input[type="file"]{display:none}
 .album-link{text-decoration:none;color:#333}
 .album-link:hover{color:#333}
 .album-count{font-size:14px;color:#666;margin-top:5px}
+.delete-user-btn{background:#d32f2f;color:white;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;font-size:14px}
+.delete-user-btn:hover{background:#b71c1c}
 </style>
 </head>
 <body>
 <h1>Хостинг изображений</h1>
-<p>Загрузите изображения для быстрого обмена</p>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+	<p>Загрузите изображения для быстрого обмена</p>
+	<button type="button" class="delete-user-btn" onclick="deleteUser()">Удалить профиль</button>
+</div>
 
 <div class="upload-container">
 <div class="upload-area" id="uploadArea">
@@ -81,6 +86,30 @@ uploadForm.submit();
 }
 });
 });
+
+function deleteUser(){
+	if(!confirm('Вы уверены, что хотите удалить весь профиль со всеми альбомами и изображениями? Это действие необратимо!')){
+		return;
+	}
+	
+	fetch('/delete-user',{
+		method:'POST'
+	})
+	.then(response=>{
+		if(response.ok){
+			// Удаляем cookie на клиенте
+			document.cookie = 'session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+			// Перезагружаем страницу для получения новой сессии
+			window.location.reload();
+		}else{
+			alert('Ошибка при удалении профиля');
+		}
+	})
+	.catch(error=>{
+		console.error('Error:',error);
+		alert('Ошибка при удалении профиля');
+	});
+}
 </script>
 </body>
 </html>

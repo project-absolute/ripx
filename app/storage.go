@@ -431,6 +431,24 @@ func deleteImage(userID, albumID, filename string) error {
 	return nil
 }
 
+// deleteUser удаляет все данные пользователя (все альбомы и директорию пользователя)
+func deleteUser(userID string) error {
+	userDir := filepath.Join("/data", userID)
+	
+	// Проверяем существование директории
+	if _, err := os.Stat(userDir); os.IsNotExist(err) {
+		return fmt.Errorf("user directory not found")
+	}
+	
+	// Удаляем директорию пользователя со всем содержимым
+	err := os.RemoveAll(userDir)
+	if err != nil {
+		return fmt.Errorf("failed to delete user directory: %v", err)
+	}
+	
+	return nil
+}
+
 // deleteAlbum удаляет весь альбом со всеми изображениями
 func deleteAlbum(userID, albumID string) error {
 	albumPath := filepath.Join("/data", userID, albumID)
