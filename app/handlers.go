@@ -32,6 +32,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 			albums = []AlbumInfo{}
 		}
 		
+		// Добавляем логирование для проверки структуры данных
+		fmt.Printf("[DEBUG] indexHandler: received %d albums\n", len(albums))
+		for i, album := range albums {
+			fmt.Printf("[DEBUG]   [%d] ID=%s, CreatedAt=%v\n", i, album.ID, album.CreatedAt)
+		}
+		
 		// Структура для передачи данных в шаблон
 		data := struct {
 			Albums    []AlbumInfo

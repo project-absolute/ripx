@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -363,6 +364,28 @@ func getUserAlbums(userID string) ([]AlbumInfo, error) {
 			ImageCount: imageCount,
 			CreatedAt:  createdAt,
 		})
+	}
+	
+	// Добавляем логирование для проверки порядка альбомов
+	fmt.Printf("[DEBUG] getUserAlbums: albums before sorting:\n")
+	for i, album := range albums {
+		fmt.Printf("[DEBUG]   [%d] ID=%s, CreatedAt=%v\n", i, album.ID, album.CreatedAt)
+	}
+	
+	// Сортируем альбомы по дате создания (новые сверху)
+	sort.Slice(albums, func(i, j int) bool {
+		// Если даты равны, сортируем по ID
+		if albums[i].CreatedAt.Equal(albums[j].CreatedAt) {
+			return albums[i].ID > albums[j].ID
+		}
+		// Новые (более поздние) даты должны быть сверху
+		return albums[i].CreatedAt.After(albums[j].CreatedAt)
+	})
+	
+	// Добавляем логирование для проверки порядка альбомов после сортировки
+	fmt.Printf("[DEBUG] getUserAlbums: albums after sorting:\n")
+	for i, album := range albums {
+		fmt.Printf("[DEBUG]   [%d] ID=%s, CreatedAt=%v\n", i, album.ID, album.CreatedAt)
 	}
 	
 	return albums, nil
