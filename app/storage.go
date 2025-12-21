@@ -125,6 +125,8 @@ func generateUniqueFilename(originalFilename, extension string) string {
 	ext := strings.ToLower(extension)
 	if ext == "" {
 		ext = ".jpg" // расширение по умолчанию
+	} else if !strings.HasPrefix(ext, ".") {
+		ext = "." + ext // добавляем точку если её нет
 	}
 
 	randomID := RandomID()
