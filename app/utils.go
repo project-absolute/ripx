@@ -36,7 +36,7 @@ func (l *Logger) Error(msg string) {
 }
 
 // Global logger instance
-var logger = NewLogger(true) // Включаем логирование для диагностики
+var logger = NewLogger(os.Getenv("DEBUG") == "true")
 
 // ErrorResponse отправляет JSON ответ с ошибкой
 func ErrorResponse(w http.ResponseWriter, statusCode int, message string) {
@@ -61,14 +61,7 @@ func ValidatePath(path string) bool {
 
 // EnsureDir создает директорию если она не существует
 func EnsureDir(path string) error {
-	logger.Debug("Создание директории: " + path)
-	err := os.MkdirAll(path, DefaultFilePerm)
-	if err != nil {
-		logger.Error("Ошибка создания директории " + path + ": " + err.Error())
-	} else {
-		logger.Debug("Директория успешно создана: " + path)
-	}
-	return err
+	return os.MkdirAll(path, DefaultFilePerm)
 }
 
 // GetFileExtension возвращает расширение файла в нижнем регистре

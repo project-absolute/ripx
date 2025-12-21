@@ -30,8 +30,6 @@ type AlbumInfo struct {
 
 // saveImage сохраняет загруженное изображение
 func saveImage(file multipart.File, header *multipart.FileHeader, userID, albumID string) (*ImageInfo, error) {
-	logger.Info("Начало сохранения файла: " + header.Filename + " для пользователя: " + userID + " в альбом: " + albumID)
-	
 	// Проверка размера файла
 	if header.Size > MaxFileSize {
 		return nil, fmt.Errorf("file too large: %d bytes", header.Size)
@@ -42,40 +40,32 @@ func saveImage(file multipart.File, header *multipart.FileHeader, userID, albumI
 	if !valid {
 		return nil, fmt.Errorf("invalid image type")
 	}
-	logger.Debug("Тип файла валиден, расширение: " + extension)
 
 	// Создание директории для альбома
 	albumPath := DataPath + "/" + userID + "/" + albumID
-	logger.Debug("Создание директории: " + albumPath)
 	if err := EnsureDir(albumPath); err != nil {
-		logger.Error("Ошибка создания директории " + albumPath + ": " + err.Error())
 		return nil, err
 	}
 
 	// Генерация уникального имени файла
 	filename := generateUniqueFilename(header.Filename, extension)
 	filePath := albumPath + "/" + filename
-	logger.Debug("Путь к файлу: " + filePath)
 
 	// Создание файла
 	dst, err := os.Create(filePath)
 	if err != nil {
-		logger.Error("Ошибка создания файла " + filePath + ": " + err.Error())
 		return nil, err
 	}
 	defer dst.Close()
 
 	// Копирование содержимого
 	if _, err := io.Copy(dst, file); err != nil {
-		logger.Error("Ошибка копирования содержимого в файл " + filePath + ": " + err.Error())
 		return nil, err
 	}
-	logger.Info("Файл успешно сохранен: " + filePath)
 
 	// Получение информации о файле
 	stat, err := os.Stat(filePath)
 	if err != nil {
-		logger.Error("Ошибка получения информации о файле " + filePath + ": " + err.Error())
 		return nil, err
 	}
 
@@ -93,7 +83,6 @@ func validateImageType(file multipart.File) (string, bool) {
 	// Чтение заголовка файла
 	buffer := make([]byte, 512)
 	if _, err := file.Read(buffer); err != nil {
-		logger.Error("Ошибка чтения заголовка файла: " + err.Error())
 		return "", false
 	}
 
@@ -102,21 +91,17 @@ func validateImageType(file multipart.File) (string, bool) {
 
 	// Определение MIME типа
 	contentType := http.DetectContentType(buffer)
-	logger.Debug("Обнаруженный MIME-тип: " + contentType)
 
 	// Проверка разрешенных типов
 	if !AllowedImageTypes[contentType] {
-		logger.Error("Неподдерживаемый MIME-тип: " + contentType)
 		return "", false
 	}
 
 	// Возвращаем соответствующее расширение
 	if ext, exists := ImageExtensions[contentType]; exists {
-		logger.Debug("MIME-тип валиден, расширение: " + ext)
 		return ext, true
 	}
 
-	logger.Error("Не найдено расширение для MIME-типа: " + contentType)
 	return "", false
 }
 
@@ -292,17 +277,13 @@ func countImagesInDir(dirPath string) int {
 // createAlbum создает новый альбом для пользователя
 func createAlbum(userID string) (string, error) {
 	albumID := RandomID()
-	logger.Info("Создание нового альбома с ID: " + albumID + " для пользователя: " + userID)
 
 	// Создание директории для альбома
 	albumPath := DataPath + "/" + userID + "/" + albumID
-	logger.Debug("Создание директории альбома: " + albumPath)
 	if err := EnsureDir(albumPath); err != nil {
-		logger.Error("Ошибка создания директории альбома " + albumPath + ": " + err.Error())
 		return "", err
 	}
 
-	logger.Info("Альбом успешно создан: " + albumID)
 	return albumID, nil
 }
 
