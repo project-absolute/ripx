@@ -12,7 +12,7 @@ const (
 	DataPath      = "/data"
 	TemplatesPath = "templates"
 	StaticPath    = "templates/static"
-	
+
 	DefaultFilePerm = 0755
 	MaxFileSize     = 10 * 1024 * 1024 // 10MB
 )
@@ -25,7 +25,7 @@ var (
 		"image/gif":  true,
 		"image/webp": true,
 	}
-	
+
 	ImageExtensions = map[string]string{
 		"image/jpeg": "jpg",
 		"image/png":  "png",
@@ -42,11 +42,6 @@ const (
 
 // Cleanup configuration
 const (
-	CleanupDuration = 1440 * time.Hour  // 60 days
-	CleanupInterval = 24 * time.Hour    // 24 hours
-)
-
-// Upload configuration
-const (
-	MaxWorkers = 8
+	CleanupDuration = 1440 * time.Hour // 60 days
+	CleanupInterval = 24 * time.Hour   // 24 hours
 )
