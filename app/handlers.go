@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 )
 
 // indexHandler обрабатывает главную страницу
@@ -255,13 +254,7 @@ func getUploadFiles(r *http.Request) []*multipart.FileHeader {
 
 // processUpload обрабатывает загрузку файлов
 func processUpload(files []*multipart.FileHeader, sessionID, albumID string, w http.ResponseWriter) error {
-	// Для небольшого количества файлов используем последовательную обработку
-	if len(files) <= 5 {
-		return processSequentialUpload(files, sessionID, albumID)
-	}
-
-	// Для большого количества файлов используем параллельную обработку
-	return processParallelUpload(files, sessionID, albumID)
+	return processSequentialUpload(files, sessionID, albumID)
 }
 
 // processSequentialUpload обрабатывает файлы последовательно
@@ -278,66 +271,6 @@ func processSequentialUpload(files []*multipart.FileHeader, sessionID, albumID s
 			return fmt.Errorf("error saving file %s: %v", fileHeader.Filename, err)
 		}
 	}
-	return nil
-}
-
-// processParallelUpload обрабатывает файлы параллельно
-func processParallelUpload(files []*multipart.FileHeader, sessionID, albumID string) error {
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-	var errors []error
-
-	workerCount := MaxWorkers
-	if len(files) < workerCount {
-		workerCount = len(files)
-	}
-
-	fileChan := make(chan *multipart.FileHeader, len(files))
-
-	// Запускаем воркеров
-	for i := 0; i < workerCount; i++ {
-		wg.Add(1)
-		go func(workerID int) {
-			defer wg.Done()
-			for fileHeader := range fileChan {
-				if err := processSingleFile(fileHeader, sessionID, albumID); err != nil {
-					mu.Lock()
-					errors = append(errors, fmt.Errorf("worker %d: %v", workerID, err))
-					mu.Unlock()
-				}
-			}
-		}(i)
-	}
-
-	// Отправляем файлы на обработку
-	for _, fileHeader := range files {
-		fileChan <- fileHeader
-	}
-	close(fileChan)
-
-	// Ждем завершения
-	wg.Wait()
-
-	if len(errors) > 0 {
-		return fmt.Errorf("upload errors: %v", errors)
-	}
-
-	return nil
-}
-
-// processSingleFile обрабатывает один файл
-func processSingleFile(fileHeader *multipart.FileHeader, sessionID, albumID string) error {
-	file, err := fileHeader.Open()
-	if err != nil {
-		return fmt.Errorf("error opening file %s: %v", fileHeader.Filename, err)
-	}
-	defer file.Close()
-
-	_, err = saveImage(file, fileHeader, sessionID, albumID)
-	if err != nil {
-		return fmt.Errorf("error saving file %s: %v", fileHeader.Filename, err)
-	}
-
 	return nil
 }
 
