@@ -23,6 +23,27 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
+// Показать индикатор загрузки
+function showUploadProgress(total) {
+  const overlay = document.getElementById('uploadOverlay');
+  const status = document.getElementById('uploadStatus');
+  const count = document.getElementById('uploadCount');
+
+  overlay.classList.add('active');
+  status.textContent = 'зᴀᴦᴩузᴋᴀ...';
+  count.textContent = '0 / ' + total + ' файлов';
+
+  return {
+    update: function (current) {
+      status.textContent = 'зᴀᴦᴩузᴋᴀ...';
+      count.textContent = current + ' / ' + total + ' файлов';
+    },
+    hide: function () {
+      overlay.classList.remove('active');
+    }
+  };
+}
+
 // handleUpload обрабатывает загрузку файлов
 function handleUpload(files, form) {
   const albumInput = form.querySelector('input[name="album_id"]');
@@ -37,7 +58,7 @@ function handleUpload(files, form) {
   }
 
   // Иначе создаем новый альбом на сервере
-  fetch('/create-album', { 
+  fetch('/create-album', {
     method: 'POST',
     credentials: 'same-origin'
   })
@@ -57,6 +78,9 @@ function handleUpload(files, form) {
 
 // uploadFilesParallel отправляет файлы параллельно
 function uploadFilesParallel(files, albumID, sessionID) {
+  const total = files.length;
+  let completed = 0;
+  const progress = showUploadProgress(total);
   const uploadPromises = [];
 
   for (let i = 0; i < files.length; i++) {
@@ -74,6 +98,8 @@ function uploadFilesParallel(files, albumID, sessionID) {
         if (!response.ok) {
           throw new Error('Upload failed for ' + file.name);
         }
+        completed++;
+        progress.update(completed);
         return response;
       })
     );
@@ -81,10 +107,12 @@ function uploadFilesParallel(files, albumID, sessionID) {
 
   Promise.all(uploadPromises)
     .then(() => {
+      progress.hide();
       // Перенаправляем в альбом
       window.location.href = '/' + sessionID + '/' + albumID;
     })
     .catch(error => {
+      progress.hide();
       console.error('Upload error:', error);
       alert('Ошибка при загрузке: ' + error.message);
     });
