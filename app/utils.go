@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -83,7 +84,8 @@ func ErrorResponse(w http.ResponseWriter, statusCode int, message string) {
 func SuccessResponse(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, `{"success": true, "data": %v}`, data)
+	jsonData, _ := json.Marshal(data)
+	fmt.Fprintf(w, `{"success": true, "data": %s}`, string(jsonData))
 }
 
 // ValidatePath проверяет безопасность пути
