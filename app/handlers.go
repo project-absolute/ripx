@@ -11,6 +11,9 @@ import (
 
 // indexHandler обрабатывает главную страницу
 func indexHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 	logger.Debug(fmt.Sprintf("indexHandler: request received, path=%s, method=%s", r.URL.Path, r.Method))
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -111,6 +114,9 @@ func contentHandler(w http.ResponseWriter, r *http.Request) {
 
 // handleAlbumPage обрабатывает страницу альбома
 func handleAlbumPage(w http.ResponseWriter, r *http.Request, sessionID, albumID string) {
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
 	logger.Debug(fmt.Sprintf("handleAlbumPage: sessionID=%s, albumID=%s", sessionID, albumID))
 	currentSessionID := getSessionID(w, r)
 	isOwner := currentSessionID == sessionID
