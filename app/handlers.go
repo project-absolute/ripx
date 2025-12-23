@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -44,7 +43,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Отображаем страницу
-	if err := renderTemplate(w, TemplatesPath+"/index.html", data); err != nil {
+	if err := renderTemplate(w, "index.html", data); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
@@ -132,14 +131,14 @@ func handleAlbumPage(w http.ResponseWriter, r *http.Request, sessionID, albumID 
 		IsOwner:        isOwner,
 	}
 
-	if err := renderTemplate(w, TemplatesPath+"/album.html", data); err != nil {
+	if err := renderTemplate(w, "album.html", data); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
 // handleImageFile обрабатывает отдачу файла изображения
 func handleImageFile(w http.ResponseWriter, r *http.Request, sessionID, albumID, filename string) {
-	filePath := DataPath + "/" + sessionID + "/" + albumID + "/" + filename
+	filePath := imagePath(sessionID, albumID, filename)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		http.NotFound(w, r)
@@ -342,11 +341,7 @@ func processSingleFile(fileHeader *multipart.FileHeader, sessionID, albumID stri
 	return nil
 }
 
-// renderTemplate рендерит HTML шаблон
-func renderTemplate(w http.ResponseWriter, templatePath string, data interface{}) error {
-	tmpl, err := template.ParseFiles(templatePath)
-	if err != nil {
-		return err
-	}
-	return tmpl.Execute(w, data)
+// renderTemplate рендерит HTML шаблон из кеша
+func renderTemplate(w http.ResponseWriter, name string, data interface{}) error {
+	return templates.ExecuteTemplate(w, name, data)
 }

@@ -23,16 +23,34 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
+// HTML шаблон для пустого состояния (используется в deleteImage и album.html)
+const EMPTY_STATE_HTML = `
+  <div class="empty-state">
+    <div class="empty-icon">📷</div>
+    <div class="empty-text">у ʙᴀᴄ ᴨоᴋᴀ нᴇᴛ зᴀᴦᴩужᴇнных изобᴩᴀжᴇний</div>
+    <a href="/" class="empty-link">зᴀᴦᴩузиᴛь ᴨᴇᴩʙоᴇ изобᴩᴀжᴇниᴇ</a>
+  </div>
+`;
+
+// showCopiedFeedback показывает визуальную обратную связь о копировании
+function showCopiedFeedback(button) {
+  const originalText = button.textContent;
+  button.textContent = 'ᴄᴋоᴨиᴩоʙᴀно!';
+  button.classList.add('copied');
+  setTimeout(function () {
+    button.textContent = originalText;
+    button.classList.remove('copied');
+  }, 2000);
+}
+
 function copyUrl(sessionID, albumID, filename, button) {
   const url = window.location.origin + '/' + sessionID + '/' + albumID + '/' + filename;
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(function () {
-      const originalText = button.textContent;
-      button.textContent = 'ᴄᴋоᴨиᴩоʙᴀно!';
-      button.classList.add('copied');
-      setTimeout(function () { button.textContent = originalText; button.classList.remove('copied') }, 2000);
-    }).catch(function (err) { console.error('нᴇ удᴀᴧоᴄь ᴄᴋоᴨиᴩоʙᴀᴛь ᴜʀʟ: ', err) });
+    navigator.clipboard.writeText(url)
+      .then(function () { showCopiedFeedback(button) })
+      .catch(function (err) { console.error('нᴇ удᴀᴧоᴄь ᴄᴋоᴨиᴩоʙᴀᴛь ᴜʀʟ: ', err) });
   } else {
+    // Fallback для старых браузеров
     const textArea = document.createElement('textarea');
     textArea.value = url;
     document.body.appendChild(textArea);
@@ -40,10 +58,7 @@ function copyUrl(sessionID, albumID, filename, button) {
     textArea.select();
     try {
       document.execCommand('copy');
-      const originalText = button.textContent;
-      button.textContent = 'ᴄᴋоᴨиᴩоʙᴀно!';
-      button.classList.add('copied');
-      setTimeout(function () { button.textContent = originalText; button.classList.remove('copied') }, 2000);
+      showCopiedFeedback(button);
     } catch (err) { console.error('Не удалось скопировать URL: ', err) }
     document.body.removeChild(textArea);
   }
@@ -74,7 +89,7 @@ function deleteImage(sessionID, albumID, filename, button) {
           if (remainingImages.length === 0) {
             // Показываем пустое состояние
             const imageGrid = document.getElementById('imageGrid');
-            imageGrid.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-text">у ʙᴀᴄ ᴨоᴋᴀ нᴇᴛ зᴀᴦᴩужᴇнных изобᴩᴀжᴇний</div><a href="/" class="empty-link">зᴀᴦᴩузиᴛь ᴨᴇᴩʙоᴇ изобᴩᴀжᴇниᴇ</a></div>';
+            imageGrid.innerHTML = EMPTY_STATE_HTML;
           }
         }, 300);
       } else {
@@ -97,10 +112,8 @@ function deleteUser() {
   })
     .then(response => {
       if (response.ok) {
-        // Удаляем cookie на клиенте
-        document.cookie = 'session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        // Перезагружаем страницу для получения новой сессии
-        window.location.reload();
+        // Перезагружаем страницу - сервер уже очистил cookie
+        window.location.href = '/';
       } else {
         alert('Ошибка при удалении профиля');
       }

@@ -12,6 +12,40 @@ import (
 	"time"
 )
 
+// dirEntryFilter определяет условие фильтрации для записи директории
+type dirEntryFilter func(entry os.DirEntry) bool
+
+// processDir обрабатывает все записи в директории с помощью фильтра
+func processDir(dirPath string, filter dirEntryFilter, process func(path string, info os.FileInfo) error) error {
+	entries, err := os.ReadDir(dirPath)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		if filter != nil && !filter(entry) {
+			continue
+		}
+
+		entryPath := filepath.Join(dirPath, entry.Name())
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+
+		if err := process(entryPath, info); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// isImageOld проверяет, является ли изображение старым
+func isImageOld(modTime time.Time) bool {
+	return time.Since(modTime) > CleanupDuration
+}
+
+
 // Logger - простая структура для логирования
 type Logger struct {
 	debug bool
@@ -71,13 +105,17 @@ func GetFileExtension(filename string) string {
 }
 
 // IsImageFile проверяет является ли файл изображением
+var ValidImageExtensions = map[string]bool{
+	".jpg":  true,
+	".jpeg": true,
+	".png":  true,
+	".gif":  true,
+	".webp": true,
+}
+
 func IsImageFile(filename string) bool {
 	ext := GetFileExtension(filename)
-	switch ext {
-	case ".jpg", ".jpeg", ".png", ".gif", ".webp":
-		return true
-	}
-	return false
+	return ValidImageExtensions[ext]
 }
 
 // RandomID генерирует случайный ID

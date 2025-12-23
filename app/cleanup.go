@@ -62,36 +62,16 @@ func cleanupOldImages() error {
 
 // cleanupUserImages очищает старые изображения в директории пользователя
 func cleanupUserImages(userDir string) error {
-	entries, err := os.ReadDir(userDir)
-	if err != nil {
-		return err
-	}
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue // Пропускаем поддиректории
-		}
-
-		filePath := filepath.Join(userDir, entry.Name())
-		info, err := entry.Info()
-		if err != nil {
-			continue // Пропускаем файл при ошибке
-		}
-
-		// Проверяем, является ли файл старым
+	return processDir(userDir, func(entry os.DirEntry) bool {
+		return !entry.IsDir()
+	}, func(filePath string, info os.FileInfo) error {
 		if isImageOld(info.ModTime()) {
 			if err := os.Remove(filePath); err != nil {
 				logger.Error("Failed to remove old image " + filePath + ": " + err.Error())
 			}
 		}
-	}
-
-	return nil
-}
-
-// isImageOld проверяет, является ли изображение старым
-func isImageOld(modTime time.Time) bool {
-	return time.Since(modTime) > CleanupDuration
+		return nil
+	})
 }
 
 // removeEmptyDirectories удаляет пустые директории

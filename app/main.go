@@ -3,11 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 )
+
+// Template cache for improved performance
+var templates *template.Template
+
 
 func main() {
 	// Инициализация приложения
@@ -62,10 +67,14 @@ func initializeApp() error {
 	return nil
 }
 
-// checkTemplates проверяет доступность шаблонов
+// checkTemplates загружает и кеширует шаблоны
 func checkTemplates() error {
-	_, err := os.Stat(TemplatesPath + "/index.html")
-	return err
+	tmpl, err := template.ParseGlob(TemplatesPath + "/*.html")
+	if err != nil {
+		return fmt.Errorf("failed to load templates: %w", err)
+	}
+	templates = tmpl
+	return nil
 }
 
 // setupRoutes настраивает HTTP роуты

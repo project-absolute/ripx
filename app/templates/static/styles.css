@@ -12,6 +12,22 @@ h1 {
   text-align: center
 }
 
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px
+}
+
+.inline-form {
+  display: inline;
+}
+
+.album-link-block {
+  text-decoration: none;
+  display: block;
+}
+
 .header {
   display: flex;
   justify-content: space-between;

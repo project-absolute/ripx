@@ -6,10 +6,17 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 )
+
+// Path builders for data directories
+func userPath(userID string) string           { return filepath.Join(DataPath, userID) }
+func albumPath(userID, albumID string) string { return filepath.Join(DataPath, userID, albumID) }
+func imagePath(userID, albumID, filename string) string { return filepath.Join(DataPath, userID, albumID, filename) }
+
 
 // ImageInfo хранит информацию об изображении
 type ImageInfo struct {
@@ -42,7 +49,7 @@ func saveImage(file multipart.File, header *multipart.FileHeader, userID, albumI
 	}
 
 	// Создание директории для альбома
-	albumPath := DataPath + "/" + userID + "/" + albumID
+	albumPath := albumPath(userID, albumID)
 	if err := EnsureDir(albumPath); err != nil {
 		return nil, err
 	}
@@ -120,10 +127,7 @@ func generateUniqueFilename(originalFilename, extension string) string {
 
 // getUserImages возвращает список изображений пользователя
 func getUserImages(userID, albumID string) ([]ImageInfo, error) {
-	dirPath := DataPath + "/" + userID
-	if albumID != "" {
-		dirPath += "/" + albumID
-	}
+	dirPath := albumPath(userID, albumID)
 
 	// Проверка существования директории
 	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
@@ -154,14 +158,12 @@ func getUserImages(userID, albumID string) ([]ImageInfo, error) {
 
 		images = append(images, ImageInfo{
 			Filename: filename,
-			Path:     dirPath + "/" + filename,
+			Path:     filepath.Join(dirPath, filename),
 			Size:     info.Size(),
 			UserID:   userID,
 			AlbumID:  albumID,
 		})
 	}
-
-
 
 	return images, nil
 }
@@ -192,7 +194,7 @@ func getSessionID(w http.ResponseWriter, r *http.Request) string {
 
 // getUserAlbums возвращает список альбомов пользователя
 func getUserAlbums(userID string) ([]AlbumInfo, error) {
-	userDir := DataPath + "/" + userID
+	userDir := userPath(userID)
 
 	// Проверка существования директории
 	if _, err := os.Stat(userDir); os.IsNotExist(err) {
@@ -212,7 +214,7 @@ func getUserAlbums(userID string) ([]AlbumInfo, error) {
 		}
 
 		albumID := entry.Name()
-		albumDir := userDir + "/" + albumID
+		albumDir := filepath.Join(userDir, albumID)
 
 		// Получение информации о директории
 		dirInfo, err := os.Stat(albumDir)
@@ -246,18 +248,13 @@ func getUserAlbums(userID string) ([]AlbumInfo, error) {
 
 // countImagesInDir подсчитывает количество изображений в директории
 func countImagesInDir(dirPath string) int {
-	entries, err := os.ReadDir(dirPath)
-	if err != nil {
-		return 0
-	}
-
 	count := 0
-	for _, entry := range entries {
-		if !entry.IsDir() && IsImageFile(entry.Name()) {
-			count++
-		}
-	}
-
+	processDir(dirPath, func(entry os.DirEntry) bool {
+		return !entry.IsDir() && IsImageFile(entry.Name())
+	}, func(path string, info os.FileInfo) error {
+		count++
+		return nil
+	})
 	return count
 }
 
@@ -266,8 +263,8 @@ func createAlbum(userID string) (string, error) {
 	albumID := RandomID()
 
 	// Создание директории для альбома
-	albumPath := DataPath + "/" + userID + "/" + albumID
-	if err := EnsureDir(albumPath); err != nil {
+	albumDir := albumPath(userID, albumID)
+	if err := EnsureDir(albumDir); err != nil {
 		return "", err
 	}
 
@@ -276,7 +273,7 @@ func createAlbum(userID string) (string, error) {
 
 // deleteImage удаляет изображение
 func deleteImage(userID, albumID, filename string) error {
-	filePath := DataPath + "/" + userID + "/" + albumID + "/" + filename
+	filePath := imagePath(userID, albumID, filename)
 
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		return fmt.Errorf("image not found")
@@ -287,18 +284,18 @@ func deleteImage(userID, albumID, filename string) error {
 
 // deleteAlbum удаляет альбом со всеми изображениями
 func deleteAlbum(userID, albumID string) error {
-	albumPath := DataPath + "/" + userID + "/" + albumID
+	albumDir := albumPath(userID, albumID)
 
-	if _, err := os.Stat(albumPath); os.IsNotExist(err) {
+	if _, err := os.Stat(albumDir); os.IsNotExist(err) {
 		return fmt.Errorf("album not found")
 	}
 
-	return os.RemoveAll(albumPath)
+	return os.RemoveAll(albumDir)
 }
 
 // deleteUser удаляет все данные пользователя
 func deleteUser(userID string) error {
-	userDir := DataPath + "/" + userID
+	userDir := userPath(userID)
 
 	if _, err := os.Stat(userDir); os.IsNotExist(err) {
 		return fmt.Errorf("user directory not found")

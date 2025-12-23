@@ -10,7 +10,7 @@
 
 <body>
   <h1>ᴩиᴨиᴋᴄ ʀᴇʙᴏʀɴ</h1>
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+  <div class="header-actions">
     <p>жиʙой, дᴀжᴇ ᴋоᴦдᴀ ᴧᴇжиᴛ</p>
     <button type="button" class="delete-user-btn" onclick="deleteUser()">удᴀᴧиᴛь ᴨᴩоɸиᴧь</button>
   </div>
@@ -32,7 +32,7 @@
     <div class="albums-title">ʙᴀɯи ᴀᴧьбоʍы ᴨод зᴀщиᴛой (нᴇᴛ)</div>
     <div class="albums-list">
       {{range .Albums}}
-      <a href="/{{$.SessionID}}/{{.ID}}" class="album-link" style="text-decoration:none;display:block;">
+      <a href="/{{$.SessionID}}/{{.ID}}" class="album-link album-link-block">
         <div class="album-item">
           <div style="font-weight:bold;color:#333;">{{.Name}}</div>
           <div class="album-count">{{.ImageCount}} изобᴩᴀжᴇний</div>
