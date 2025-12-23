@@ -111,13 +111,12 @@ func contentHandler(w http.ResponseWriter, r *http.Request) {
 
 // handleAlbumPage обрабатывает страницу альбома
 func handleAlbumPage(w http.ResponseWriter, r *http.Request, sessionID, albumID string) {
+	logger.Debug(fmt.Sprintf("handleAlbumPage: sessionID=%s, albumID=%s", sessionID, albumID))
 	currentSessionID := getSessionID(w, r)
 	isOwner := currentSessionID == sessionID
 
-	images, err := getUserImages(sessionID, albumID)
-	if err != nil {
-		images = []ImageInfo{}
-	}
+	images, _ := getUserImages(sessionID, albumID)
+	logger.Debug(fmt.Sprintf("handleAlbumPage: images_count=%d", len(images)))
 
 	data := struct {
 		Images         []ImageInfo
