@@ -93,7 +93,10 @@ function uploadFilesParallel(files, albumID, sessionID) {
       fetch('/upload', {
         method: 'POST',
         body: formData,
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
       }).then(response => {
         if (!response.ok) {
           throw new Error('Upload failed for ' + file.name);
