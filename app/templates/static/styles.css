@@ -275,9 +275,27 @@ input[type="file"] {
 }
 
 .image-item img {
-  width: 100%;
+ width: 100%;
   height: auto;
-  display: block
+  display: block;
+  cursor: zoom-in;
+  transition: transform 0.3s ease;
+}
+
+.image-item img.zoomed {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  z-index: 1000;
+  cursor: zoom-out;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 8px;
 }
 
 .image-info {

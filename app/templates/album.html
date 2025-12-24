@@ -55,7 +55,7 @@
   <div class="image-grid" id="imageGrid">
     {{range .Images}}
     <div class="image-item">
-      <img src="/{{$.OwnerSessionID}}/{{$.AlbumID}}/{{.Filename}}" alt="{{.Filename}}">
+      <img src="/{{$.OwnerSessionID}}/{{$.AlbumID}}/{{.Filename}}" alt="{{.Filename}}" class="zoomable-image" onclick="toggleZoom(this)">
       <div class="image-info">
         <div class="image-name">{{.Filename}}</div>
         <div>

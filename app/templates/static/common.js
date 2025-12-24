@@ -230,3 +230,14 @@ function deleteUser() {
       alert('Ошибка при удалении профиля');
     });
 }
+
+// Функция для переключения увеличения изображения
+function toggleZoom(img) {
+  if (img.classList.contains('zoomed')) {
+    img.classList.remove('zoomed');
+    img.style.cursor = 'zoom-in';
+  } else {
+    img.classList.add('zoomed');
+    img.style.cursor = 'zoom-out';
+  }
+}
