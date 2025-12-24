@@ -9,11 +9,16 @@
 </head>
 
 <body>
-  <h1>ᴩиᴨиᴋᴄ ʀᴇʙᴏʀɴ</h1>
-  <div class="header-actions">
-    <p>жиʙой, дᴀжᴇ ᴋоᴦдᴀ ᴧᴇжиᴛ</p>
-    <button type="button" class="delete-user-btn" onclick="deleteUser()">удᴀᴧиᴛь ᴨᴩоɸиᴧь</button>
-  </div>
+  <!-- Blob эффекты фона -->
+  <div class="blob blob-1"></div>
+ <div class="blob blob-2"></div>
+
+  <div class="glass-card">
+    <h1>ᴩиᴨиᴋᴄ ʀᴇʙᴏʀɴ</h1>
+    <div class="header-actions">
+      <p>жиʙой, дᴀжᴇ ᴋоᴦдᴀ ᴧᴇжиᴛ</p>
+      <button type="button" class="delete-user-btn" onclick="deleteUser()">удᴀᴧиᴛь ᴨᴩоɸиᴧь</button>
+    </div>
 
   <div class="upload-container">
     <div class="upload-area" id="uploadArea">
@@ -53,7 +58,8 @@
   </div>
   {{end}}
 
-  <script src="/static/common.js"></script>
+  </div> <!-- Закрывающий тег для glass-card -->
+ <script src="/static/common.js"></script>
 </body>
 
 </html>

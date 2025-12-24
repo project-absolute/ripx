@@ -9,19 +9,24 @@
 </head>
 
 <body>
-  <div class="header">
-    <h1>ᴀᴧьбоʍ: {{.AlbumID}}</h1>
-    <div>
-      <a href="/" class="upload-more">нᴀ ᴦᴧᴀʙную</a>
-      {{if .IsOwner}}
-      <form action="/delete-album" method="POST" class="inline-form"
-        onsubmit="return confirm('Вы уверены, что хотите удалить весь альбом со всеми изображениями?')">
-        <input type="hidden" name="album_id" value="{{.AlbumID}}">
-        <button type="submit" class="delete-album-btn">удᴀᴧиᴛь ᴀᴧьбоʍ</button>
-      </form>
-      {{end}}
+  <!-- Blob эффекты фона -->
+  <div class="blob blob-1"></div>
+ <div class="blob blob-2"></div>
+
+  <div class="glass-card">
+    <div class="header">
+      <h1>ᴀᴧьбоʍ: {{.AlbumID}}</h1>
+      <div>
+        <a href="/" class="upload-more">нᴀ ᴦᴧᴀʙную</a>
+        {{if .IsOwner}}
+        <form action="/delete-album" method="POST" class="inline-form"
+          onsubmit="return confirm('Вы уверены, что хотите удалить весь альбом со всеми изображениями?')">
+          <input type="hidden" name="album_id" value="{{.AlbumID}}">
+          <button type="submit" class="delete-album-btn">удᴀᴧиᴛь ᴀᴧьбоʍ</button>
+        </form>
+        {{end}}
+      </div>
     </div>
-  </div>
 
   {{if .IsOwner}}
   <div class="upload-container">
@@ -72,7 +77,8 @@
     <a href="/" class="empty-link">зᴀᴦᴩузиᴛь ᴨᴇᴩʙоᴇ изобᴩᴀжᴇниᴇ</a>
   </div>
   {{end}}
-  <script src="/static/common.js"></script>
+  </div> <!-- Закрывающий тег для glass-card -->
+ <script src="/static/common.js"></script>
 </body>
 
 </html>
