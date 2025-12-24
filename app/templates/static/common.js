@@ -234,9 +234,19 @@ function deleteUser() {
 // Открывает изображение в оверлее
 function toggleZoom(img) {
   const overlay = document.getElementById('image-viewer-overlay');
-  const zoomedImage = document.getElementById('zoomed-image-element');
-  
-  zoomedImage.src = img.src;
+  const zoomedImageContainer = document.getElementById('zoomed-image-element');
+
+  // Очищаем контейнер перед вставкой нового изображения
+  while (zoomedImageContainer.firstChild) {
+    zoomedImageContainer.removeChild(zoomedImageContainer.firstChild);
+  }
+
+  // Клонируем узел, чтобы не перемещать оригинал
+  const clonedImage = img.cloneNode(true);
+  clonedImage.removeAttribute('onclick'); // Убираем обработчик, чтобы избежать рекурсии
+  clonedImage.className = ''; // Сбрасываем классы, чтобы стили превью не мешали
+
+  zoomedImageContainer.appendChild(clonedImage);
   overlay.classList.add('active');
 }
 
