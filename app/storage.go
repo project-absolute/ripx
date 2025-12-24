@@ -147,7 +147,7 @@ func getUserImages(userID, albumID string) ([]ImageInfo, error) {
 		}
 
 		filename := entry.Name()
-		if !IsImageFile(filename) {
+	if !IsImageFile(filename) {
 			continue
 		}
 
@@ -164,6 +164,18 @@ func getUserImages(userID, albumID string) ([]ImageInfo, error) {
 			AlbumID:  albumID,
 		})
 	}
+
+	// Сортировка изображений по времени модификации (старые сверху, новые снизу)
+	sort.Slice(images, func(i, j int) bool {
+		infoI, errI := os.Stat(images[i].Path)
+		infoJ, errJ := os.Stat(images[j].Path)
+		
+		if errI != nil || errJ != nil {
+			return false // если не можем получить статус файла, не меняем порядок
+		}
+		
+		return infoI.ModTime().Before(infoJ.ModTime())
+	})
 
 	return images, nil
 }
