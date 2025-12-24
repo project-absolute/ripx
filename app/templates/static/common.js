@@ -81,62 +81,53 @@ function uploadFilesParallel(files, albumID, sessionID) {
   const total = files.length;
   let completed = 0;
   const progress = showUploadProgress(total);
-  const uploadPromises = [];
-
+  
+  // Сначала конвертируем все файлы, затем отправляем
+  const conversionPromises = [];
   for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    
-    // Конвертируем изображение в WebP перед отправкой
-    convertToWebP(file).then(convertedFile => {
-      const formData = new FormData();
-      formData.append('image', convertedFile);
-      formData.append('album_id', albumID);
-
-      uploadPromises.push(
-        fetch('/upload', {
-          method: 'POST',
-          body: formData,
-          credentials: 'same-origin',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        }).then(response => {
-          if (!response.ok) {
-            throw new Error('Upload failed for ' + convertedFile.name);
-          }
-          completed++;
-          progress.update(completed);
-          return response;
+    conversionPromises.push(
+      convertToWebP(files[i])
+        .then(convertedFile => ({ file: convertedFile, originalFile: files[i] }))
+        .catch(error => {
+          console.error('Error converting image to WebP:', error);
+          // Если конвертация не удалась, возвращаем оригинальный файл
+          return { file: files[i], originalFile: files[i] };
         })
-      );
-    }).catch(error => {
-      console.error('Error converting image to WebP:', error);
-      // Если конвертация не удалась, отправляем оригинальный файл
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('album_id', albumID);
-
-      uploadPromises.push(
-        fetch('/upload', {
-          method: 'POST',
-          body: formData,
-          credentials: 'same-origin',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        }).then(response => {
-          if (!response.ok) {
-            throw new Error('Upload failed for ' + file.name);
-          }
-          completed++;
-          progress.update(completed);
-          return response;
-        })
-      );
-    });
+    );
   }
+  
+  // После завершения всех конвертаций отправляем файлы
+  Promise.all(conversionPromises)
+    .then(convertedFiles => {
+      const uploadPromises = [];
+      
+      for (let i = 0; i < convertedFiles.length; i++) {
+        const { file, originalFile } = convertedFiles[i];
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('album_id', albumID);
 
-  Promise.all(uploadPromises)
+        uploadPromises.push(
+          fetch('/upload', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          }).then(response => {
+            if (!response.ok) {
+              throw new Error('Upload failed for ' + file.name);
+            }
+            completed++;
+            progress.update(completed);
+            return response;
+          })
+        );
+      }
+      
+      return Promise.all(uploadPromises);
+    })
     .then(() => {
       progress.hide();
       // Перенаправляем в альбом
